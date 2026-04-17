@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cee-Lo by Dices — Game Demo</title>
+<meta name="description" content="Cee-Lo (4-5-6) street dice game by Dices. Demo build — play money only." />
+<meta property="og:title" content="Cee-Lo by Dices — Game Demo" />
+<meta property="og:description" content="Street dice, reimagined. A Dices original — Cee-Lo 4-5-6 with side bets, live betting windows, and full hand hierarchy." />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#0a0c0e" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ──────────────────────────────────────────────────────────────
+   Cee-Lo · Dices — Styles
+   Near-black + mint accent, inspired by Shuffle casino dice UI
+   ────────────────────────────────────────────────────────────── */
+
+:root {
+  --bg: #0a0c0e;
+  --surface: #13171b;
+  --surface-2: #1a1f25;
+  --surface-3: #232931;
+  --border: #262c34;
+  --border-soft: #1d2229;
+  --text: #e8ecef;
+  --text-dim: #8b95a0;
+  --text-mute: #5c6673;
+
+  --mint: #7BFDEB;
+  --mint-soft: rgba(123, 253, 235, 0.15);
+  --mint-dim: rgba(123, 253, 235, 0.4);
+  --mint-glow: rgba(123, 253, 235, 0.55);
+
+  --win: oklch(0.78 0.18 155);
+  --win-soft: oklch(0.78 0.18 155 / 0.12);
+  --lose: oklch(0.65 0.22 25);
+  --lose-soft: oklch(0.65 0.22 25 / 0.12);
+  --push: oklch(0.72 0.12 85);
+
+  --rail-w: 340px;
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --sans: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+}
+button { font-family: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+input, select { font-family: inherit; color: inherit; background: none; border: none; outline: none; }
+input[type=number] { -moz-appearance: textfield; }
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* ── App shell ────────────────────────────────────────────── */
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(1200px 600px at 70% 10%, rgba(123, 253, 235, 0.04), transparent 60%),
+    radial-gradient(800px 400px at 10% 90%, rgba(123, 253, 235, 0.025), transparent 60%),
+    var(--bg);
+}
+
+/* ── Topbar ───────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-soft);
+  gap: 16px;
+  background: rgba(10, 12, 14, 0.85);
+  backdrop-filter: blur(8px);
+  position: sticky; top: 0; z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { height: 26px; width: auto; display: block; }
+.brand-word {
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.game-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-mute);
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 4px;
+}
+.balance-pill {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.bal-label { color: var(--text-mute); font-size: 10px; letter-spacing: 0.1em; }
+.bal-val { color: var(--mint); font-weight: 600; }
+.coin-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #a8ffee, var(--mint) 70%);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.3), inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.icon-btn:hover { border-color: var(--mint-dim); color: var(--mint); }
+.avatar-dot {
+  width: 36px; height: 36px; border-radius: 6px;
+  background: linear-gradient(135deg, var(--mint) 0%, #3da898 100%);
+  border: 1px solid var(--border);
+}
+
+/* ── Main grid ────────────────────────────────────────────── */
+.main-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--rail-w) 1fr;
+  min-height: 0;
+  padding: 18px;
+  gap: 16px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Bet rail ─────────────────────────────────────────────── */
+.bet-rail {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.rail-tabs {
+  display: flex;
+  padding: 6px;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface-2);
+}
+.tab {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--text-mute);
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.02em;
+  transition: all .15s;
+}
+.tab.active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.tab:not(.active):hover { color: var(--text-dim); }
+
+.rail-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* Amount + fields */
+.field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.amount-block { margin-bottom: 10px; }
+.amount-input {
+  display: flex; align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  gap: 8px;
+  transition: border-color .15s;
+}
+.amount-input:focus-within { border-color: var(--mint-dim); }
+.amount-input.disabled { opacity: 0.55; pointer-events: none; }
+.amount-input input {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 15px;
+  background: transparent;
+  color: var(--text);
+  width: 100%;
+}
+.amt-btns { display: flex; gap: 4px; }
+.amt-btns button {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-3);
+  transition: all .15s;
+}
+.amt-btns button:hover:not(:disabled) { color: var(--mint); border-color: var(--mint-dim); }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.field-col { min-width: 0; }
+.readout {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+}
+.readout.accent { color: var(--mint); }
+
+/* Side bets */
+.sidebets { padding: 16px; flex: 1; overflow-y: auto; }
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.section-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+}
+.live-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--mint);
+  background: var(--mint-soft);
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.sb-group { margin-bottom: 14px; }
+.sb-group:last-child { margin-bottom: 0; }
+.sb-group-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.sb-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sb-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; }
+
+.sidebet-chip {
+  display: flex; flex-direction: column;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  gap: 6px;
+  transition: all .15s;
+  text-align: left;
+  min-height: 52px;
+}
+.sidebet-chip:hover:not(:disabled) { border-color: var(--mint-dim); transform: translateY(-1px); }
+.sidebet-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.sidebet-chip.active {
+  background: var(--mint-soft);
+  border-color: var(--mint);
+  box-shadow: 0 0 0 1px var(--mint-dim), 0 4px 12px rgba(123, 253, 235, 0.08);
+}
+.sidebet-chip.chip-win {
+  border-color: var(--win);
+  background: var(--win-soft);
+  box-shadow: 0 0 0 1px var(--win), 0 0 16px oklch(0.78 0.18 155 / 0.25);
+}
+.sidebet-chip.chip-lose {
+  border-color: var(--lose);
+  background: var(--lose-soft);
+  opacity: 0.65;
+}
+.sb-top { display: flex; align-items: center; justify-content: space-between; }
+.sb-label { font-size: 11px; font-weight: 600; color: var(--text); }
+.sb-odds {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--mint);
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(123, 253, 235, 0.08);
+}
+.sidebet-chip.active .sb-odds { background: rgba(10, 12, 14, 0.4); }
+.sb-bottom { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.sb-amt {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--mint);
+  font-weight: 600;
+}
+.sb-place {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: 0.05em;
+}
+.sb-steppers { display: flex; gap: 2px; }
+.sb-steppers span {
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.sb-steppers span:hover { color: var(--mint); border-color: var(--mint-dim); }
+
+/* Rail footer */
+.rail-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface-2);
+}
+.stake-line {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.stake-val { color: var(--text); font-weight: 600; }
+.play-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--mint);
+  color: #031210;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  transition: all .15s;
+  box-shadow: 0 4px 16px rgba(123, 253, 235, 0.18);
+}
+.play-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(123, 253, 235, 0.3);
+}
+.play-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+.play-btn.loading {
+  background: var(--surface-3);
+  color: var(--text-dim);
+  box-shadow: none;
+  animation: loadingPulse 1.2s infinite;
+}
+.play-btn.ready {
+  background: var(--mint);
+  animation: readyPulse 1.4s infinite;
+}
+@keyframes loadingPulse {
+  0%, 100% { background: var(--surface-3); }
+  50% { background: var(--surface-2); }
+}
+@keyframes readyPulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(123, 253, 235, 0.18); }
+  50% { box-shadow: 0 4px 32px rgba(123, 253, 235, 0.5); }
+}
+
+.payout-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.payout-box.payout-win { border-color: var(--win); background: var(--win-soft); }
+.payout-box.payout-lose { border-color: var(--lose); background: var(--lose-soft); }
+.payout-box.payout-push { border-color: var(--push); }
+.pb-row {
+  display: flex; justify-content: space-between;
+  padding: 3px 0;
+  color: var(--text-dim);
+}
+.pb-row.total {
+  border-top: 1px solid var(--border);
+  margin-top: 4px; padding-top: 8px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ── Stage ────────────────────────────────────────────────── */
+.stage {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  display: flex; flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+.stage-inner {
+  flex: 1;
+  display: flex; flex-direction: column;
+  padding: 32px;
+  gap: 16px;
+  background:
+    radial-gradient(900px 500px at 50% 50%, rgba(123, 253, 235, 0.03), transparent 70%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Zone */
+.zone {
+  flex: 1;
+  display: flex; flex-direction: column;
+  padding: 24px 28px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all .25s;
+  position: relative;
+  overflow: hidden;
+}
+.zone-active {
+  border-color: var(--mint-dim);
+  box-shadow: 0 0 0 1px var(--mint-dim), 0 8px 32px rgba(123, 253, 235, 0.08);
+}
+.zone-active::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(400px 200px at 50% 50%, rgba(123, 253, 235, 0.06), transparent 70%);
+  pointer-events: none;
+}
+.zone-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+.zone-title {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+}
+.zone-active .zone-title { color: var(--mint); }
+.zone-glyph {
+  font-size: 11px;
+  color: var(--mint);
+}
+.zone-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+}
+.zone-body {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 0;
+}
+.zone-footer {
+  display: flex; justify-content: center;
+  min-height: 28px;
+}
+
+/* Dice */
+.dice-row { display: flex; gap: 16px; }
+.die {
+  background: linear-gradient(160deg, #1a2026, #0e1215);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 4px 12px rgba(0,0,0,0.5);
+  position: relative;
+  transition: transform .2s;
+}
+.die::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), transparent 50%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.die-rolling {
+  animation: diceShake 0.25s infinite;
+  border-color: var(--mint-dim);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 4px 12px rgba(0,0,0,0.5),
+    0 0 20px rgba(123, 253, 235, 0.2);
+}
+@keyframes diceShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-1px, -2px) rotate(-2deg); }
+  50% { transform: translate(2px, 1px) rotate(2deg); }
+  75% { transform: translate(-1px, 2px) rotate(-1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* Result badge */
+.result-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+.result-badge.placeholder { color: var(--text-mute); background: transparent; border-style: dashed; }
+.result-badge.tone-hot {
+  color: var(--mint);
+  border-color: var(--mint);
+  background: var(--mint-soft);
+  box-shadow: 0 0 12px rgba(123, 253, 235, 0.15);
+}
+.result-badge.tone-cold {
+  color: var(--lose);
+  border-color: var(--lose);
+  background: var(--lose-soft);
+}
+.result-badge.tone-mute { color: var(--text-mute); }
+.point-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mint);
+  padding: 1px 6px;
+  background: rgba(10, 12, 14, 0.35);
+  border-radius: 3px;
+}
+
+/* VS divider */
+.vs-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 4px 0;
+}
+.vs-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+.vs-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--text-mute);
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  min-width: 140px;
+  text-align: center;
+  transition: all .25s;
+}
+.vs-win .vs-label { color: var(--win); border-color: var(--win); background: var(--win-soft); }
+.vs-lose .vs-label { color: var(--lose); border-color: var(--lose); background: var(--lose-soft); }
+.vs-push .vs-label { color: var(--push); border-color: var(--push); }
+
+/* Tap-ready player zone */
+.player-zone-wrap { position: relative; flex: 1; display: flex; }
+.player-zone-wrap .zone { flex: 1; }
+.player-zone-wrap.tap-ready { cursor: pointer; }
+.player-zone-wrap.tap-ready .zone {
+  cursor: pointer;
+  border-color: var(--mint);
+  box-shadow: 0 0 0 1px var(--mint), 0 8px 40px rgba(123, 253, 235, 0.2);
+  animation: tapPulse 1.6s infinite;
+}
+.player-zone-wrap.tap-ready:hover .zone {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--mint), 0 12px 50px rgba(123, 253, 235, 0.3);
+}
+@keyframes tapPulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--mint), 0 8px 40px rgba(123, 253, 235, 0.15); }
+  50% { box-shadow: 0 0 0 1px var(--mint), 0 8px 50px rgba(123, 253, 235, 0.35); }
+}
+.tap-hint {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--mint);
+  background: rgba(10, 12, 14, 0.85);
+  padding: 6px 14px;
+  border: 1px solid var(--mint);
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0.92;
+  backdrop-filter: blur(4px);
+}
+
+/* Flash banner */
+.flash {
+  position: absolute;
+  inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px;
+  background: rgba(10, 12, 14, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 5;
+  animation: flashIn 0.4s cubic-bezier(.2,.8,.2,1);
+  pointer-events: none;
+}
+@keyframes flashIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.flash-glyph {
+  font-family: var(--mono);
+  font-size: 48px;
+  letter-spacing: 0.1em;
+  color: var(--text);
+}
+.flash-msg {
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.flash-win .flash-glyph { color: var(--mint); text-shadow: 0 0 40px rgba(123, 253, 235, 0.6); }
+.flash-win .flash-msg { color: var(--mint); text-shadow: 0 0 40px rgba(123, 253, 235, 0.6); }
+.flash-lose .flash-glyph, .flash-lose .flash-msg { color: var(--lose); }
+.flash-push .flash-glyph, .flash-push .flash-msg { color: var(--push); }
+.flash-err .flash-msg { color: var(--lose); font-size: 24px; }
+
+/* History strip */
+.history-strip {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border-soft);
+  min-height: 48px;
+}
+.hs-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-mute);
+  flex-shrink: 0;
+}
+.hs-placeholder {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-mute);
+  font-style: italic;
+}
+.hs-scroller {
+  display: flex; gap: 6px;
+  overflow-x: auto;
+  flex: 1;
+  scrollbar-width: none;
+}
+.hs-scroller::-webkit-scrollbar { display: none; }
+.hs-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+.hs-chip.hs-win { border-color: var(--win); color: var(--win); background: var(--win-soft); }
+.hs-chip.hs-lose { border-color: var(--lose); color: var(--lose); background: var(--lose-soft); }
+.hs-chip.hs-push { border-color: var(--push); color: var(--push); }
+.hs-vs { opacity: 0.5; font-size: 9px; }
+.hs-net { font-weight: 700; margin-left: 4px; }
+
+/* Bottom strip */
+.bottom-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border-soft);
+  cursor: pointer;
+  transition: background .15s;
+}
+.bottom-strip:hover { background: var(--surface-2); }
+.bs-left { display: flex; align-items: center; gap: 10px; }
+.bs-title { font-weight: 600; font-size: 13px; }
+.bs-tag {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-mute);
+  padding: 2px 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  letter-spacing: 0.08em;
+}
+.bs-right { display: flex; align-items: center; gap: 14px; font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+.bs-odds { color: var(--mint); font-weight: 600; }
+.bs-fair { letter-spacing: 0.05em; }
+
+/* Rules drawer */
+.drawer-overlay {
+  position: fixed; inset: 0;
+  background: rgba(3, 5, 7, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex; justify-content: flex-end;
+  animation: fadeIn .2s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.drawer {
+  width: 480px; max-width: 90vw;
+  height: 100%;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  animation: slideIn .3s cubic-bezier(.2,.8,.2,1);
+  overflow: hidden;
+}
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.drawer-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.drawer-head h2 { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+.x-btn {
+  width: 32px; height: 32px; border-radius: 6px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+.x-btn:hover { color: var(--mint); border-color: var(--mint-dim); }
+.drawer-body { padding: 18px 22px; overflow-y: auto; flex: 1; }
+.drawer-body section { margin-bottom: 22px; }
+.drawer-body h3 {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+}
+.drawer-body p { margin: 0; color: var(--text-dim); line-height: 1.55; font-size: 13px; }
+.rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.rule-card {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.rule-badge {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-mute);
+  margin-bottom: 4px;
+}
+.rule-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.rule-sub { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+.rule-hot { border-color: var(--mint); background: var(--mint-soft); }
+.rule-hot .rule-badge { color: var(--mint); }
+.rule-cold { border-color: var(--lose); background: var(--lose-soft); }
+.rule-cold .rule-badge { color: var(--lose); }
+.hier-list {
+  list-style: none; padding: 0; margin: 0;
+  font-family: var(--mono); font-size: 12px;
+}
+.hier-list li {
+  display: flex; gap: 10px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-dim);
+}
+.hier-list li span {
+  color: var(--mint);
+  font-weight: 700;
+  min-width: 18px;
+}
+
+/* Tweaks panel */
+.tweaks-panel {
+  position: fixed;
+  bottom: 18px; right: 18px;
+  width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--mint-dim);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(123, 253, 235, 0.15);
+  z-index: 50;
+  animation: tweaksIn .2s ease-out;
+}
+@keyframes tweaksIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.tp-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  color: var(--mint); text-transform: uppercase;
+}
+.tp-head button { color: var(--text-dim); }
+.tp-body { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.tp-field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-dim); }
+.tp-field.toggle { flex-direction: row; justify-content: space-between; align-items: center; }
+.tp-slider-row { display: flex; align-items: center; gap: 10px; }
+.tp-slider-row input[type=range] { flex: 1; accent-color: var(--mint); }
+.tp-val { font-family: var(--mono); color: var(--mint); font-size: 11px; min-width: 36px; text-align: right; }
+.tp-field select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.tp-field input[type=checkbox] { accent-color: var(--mint); width: 16px; height: 16px; }
+.tp-hint { font-family: var(--mono); font-size: 10px; color: var(--text-mute); padding-top: 4px; border-top: 1px solid var(--border-soft); }
+
+/* Responsive */
+@media (max-width: 960px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+  .bet-rail { max-height: none; order: 2; }
+  .stage { order: 1; min-height: 60vh; }
+  .stage-inner { padding: 18px; }
+  .zone { padding: 16px; }
+  .dice-row { gap: 10px; }
+  .flash-msg { font-size: 38px; }
+}
+@media (max-width: 520px) {
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .brand-word { display: none; }
+  .game-tag { display: none; }
+  .balance-pill { padding: 5px 10px; }
+  .sb-grid-4 { grid-template-columns: 1fr 1fr; }
+  .flash-msg { font-size: 28px; }
+  .flash-glyph { font-size: 32px; }
+}
+
+</style>
+<link rel="icon" href="data:image/png;base64,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" />
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+// ─────────────────────────────────────────────────────────────
+// Cee-Lo game logic — rules, roll evaluation, state machine
+// ─────────────────────────────────────────────────────────────
+
+const rand6 = () => 1 + Math.floor(Math.random() * 6);
+const rollDice = () => [rand6(), rand6(), rand6()];
+
+// Evaluate a 3-dice roll into a canonical outcome.
+// Returns: { kind, point?, label, rank }
+//   kind: 'cee-lo' | 'trips' | 'pair6' | 'point' | 'pair1' | 'bust' | 'dead'
+function evaluateRoll(dice) {
+  const sorted = [...dice].sort((a, b) => a - b);
+  const [a, b, c] = sorted;
+
+  // Trips
+  if (a === b && b === c) {
+    return {
+      kind: 'trips',
+      value: a,
+      label: a === 6 ? 'TRIP SIXES' : `TRIPS ${a}s`,
+      rank: a === 6 ? 1 : 2 - a / 100, // higher trip wins
+    };
+  }
+  // 4-5-6 Cee-Lo
+  if (a === 4 && b === 5 && c === 6) {
+    return { kind: 'cee-lo', label: 'CEE-LO', rank: 3 };
+  }
+  // 1-2-3 bust
+  if (a === 1 && b === 2 && c === 3) {
+    return { kind: 'bust', label: 'ACE OUT', rank: 100 };
+  }
+  // Pair detection
+  let pair = null, odd = null;
+  if (a === b) { pair = a; odd = c; }
+  else if (b === c) { pair = b; odd = a; }
+
+  if (pair !== null) {
+    if (odd === 6) return { kind: 'pair6', label: 'HEADCRACK', rank: 4 };
+    if (odd === 1) return { kind: 'pair1', label: 'ACED OUT', rank: 99 };
+    // Point 2/3/4/5
+    return {
+      kind: 'point',
+      point: odd,
+      label: `POINT ${odd}`,
+      rank: 10 - odd, // point 5 = rank 5 (best point), point 2 = rank 8 (worst)
+    };
+  }
+  // Dead roll
+  return { kind: 'dead', label: 'DEAD ROLL', rank: 50 };
+}
+
+const isInstantWin = (r) => r.kind === 'cee-lo' || r.kind === 'trips' || r.kind === 'pair6';
+const isInstantLoss = (r) => r.kind === 'bust' || r.kind === 'pair1';
+const isPoint = (r) => r.kind === 'point';
+const isDead = (r) => r.kind === 'dead';
+
+// Compare two results (house vs player). Returns 'win' | 'lose' | 'push' from PLAYER's perspective.
+function comparePlayerVsHouse(house, player) {
+  if (isInstantWin(player) && !isInstantWin(house)) return 'win';
+  if (isInstantWin(house) && !isInstantWin(player)) return 'lose';
+  if (isInstantWin(house) && isInstantWin(player)) {
+    // Both instant wins — lower rank = higher outcome
+    if (player.rank < house.rank) return 'win';
+    if (player.rank > house.rank) return 'lose';
+    return 'push';
+  }
+  if (isInstantLoss(player)) return 'lose';
+  if (isInstantLoss(house)) return 'win';
+  // Both set points
+  if (player.point > house.point) return 'win';
+  if (player.point < house.point) return 'lose';
+  return 'push';
+}
+
+// Side bet payout odds (approximate, tuned)
+const SIDE_BETS = {
+  over3:    { label: 'Over 3.5',    odds: 1.1, group: 'overunder' },
+  under3:   { label: 'Under 3.5',   odds: 2.8, group: 'overunder' },
+  exact2:   { label: 'Exact 2',     odds: 8,   group: 'exact' },
+  exact3:   { label: 'Exact 3',     odds: 8,   group: 'exact' },
+  exact4:   { label: 'Exact 4',     odds: 8,   group: 'exact' },
+  exact5:   { label: 'Exact 5',     odds: 8,   group: 'exact' },
+  headcrack:{ label: 'Headcrack',   odds: 7,   group: 'special' },
+  aceout:   { label: 'Ace Out',     odds: 9,   group: 'special' },
+  tripsix:  { label: 'Trip Sixes',  odds: 200, group: 'special' },
+  push:     { label: 'Push',        odds: 10,  group: 'special' },
+};
+
+// Evaluate a side bet given final house + player results.
+function resolveSideBet(betKey, house, player) {
+  const p = player;
+  const h = house;
+  switch (betKey) {
+    case 'over3':  return isPoint(p) && p.point > 3;
+    case 'under3': return isPoint(p) && p.point <= 3;
+    case 'exact2': return isPoint(p) && p.point === 2;
+    case 'exact3': return isPoint(p) && p.point === 3;
+    case 'exact4': return isPoint(p) && p.point === 4;
+    case 'exact5': return isPoint(p) && p.point === 5;
+    case 'headcrack': return isInstantWin(p);
+    case 'aceout':    return isInstantLoss(p);
+    case 'tripsix':   return p.kind === 'trips' && p.value === 6;
+    case 'push': {
+      return isPoint(h) && isPoint(p) && h.point === p.point;
+    }
+    default: return false;
+  }
+}
+
+// Main bet payout multiplier based on win type.
+// Standard 1:1, with boosted payouts for 4-5-6 (2x), Trips (3x), Trip Sixes (5x).
+function mainBetPayout(outcome, playerResult) {
+  if (outcome !== 'win') return outcome === 'push' ? 1 : 0;
+  if (playerResult.kind === 'trips' && playerResult.value === 6) return 1 + 5;
+  if (playerResult.kind === 'trips') return 1 + 3;
+  if (playerResult.kind === 'cee-lo') return 1 + 2;
+  return 1 + 1; // standard 1:1 (return stake + 1x)
+}
+
+window.CeeLo = {
+  rollDice, evaluateRoll,
+  isInstantWin, isInstantLoss, isPoint, isDead,
+  comparePlayerVsHouse,
+  SIDE_BETS, resolveSideBet, mainBetPayout,
+};
+
+</script>
+<script type="text/babel">
+// ─────────────────────────────────────────────────────────────
+// Cee-Lo UI components
+// ─────────────────────────────────────────────────────────────
+const { useState, useEffect, useRef, useMemo } = React;
+
+// ── Die (single) ──────────────────────────────────────────────
+function Die({ value, rolling, size = 64, delay = 0 }) {
+  const [displayVal, setDisplayVal] = useState(value);
+
+  useEffect(() => {
+    if (!rolling) { setDisplayVal(value); return; }
+    let id;
+    const tick = () => {
+      setDisplayVal(1 + Math.floor(Math.random() * 6));
+      id = setTimeout(tick, 55);
+    };
+    id = setTimeout(tick, delay);
+    return () => clearTimeout(id);
+  }, [rolling, value, delay]);
+
+  const pipPositions = {
+    1: [[0.5, 0.5]],
+    2: [[0.25, 0.25], [0.75, 0.75]],
+    3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]],
+    4: [[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]],
+    5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]],
+    6: [[0.25, 0.22], [0.25, 0.5], [0.25, 0.78], [0.75, 0.22], [0.75, 0.5], [0.75, 0.78]],
+  };
+  const pipR = size * 0.075;
+  const pips = pipPositions[displayVal] || [];
+
+  return (
+    <div
+      className={`die ${rolling ? 'die-rolling' : ''}`}
+      style={{ width: size, height: size, borderRadius: size * 0.18 }}
+    >
+      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+        {pips.map(([x, y], i) => (
+          <circle key={i} cx={x * size} cy={y * size} r={pipR} fill="#7BFDEB" />
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+// ── Dice row ──────────────────────────────────────────────────
+function DiceRow({ dice, rolling, size = 64 }) {
+  return (
+    <div className="dice-row">
+      {dice.map((v, i) => (
+        <Die key={i} value={v} rolling={rolling} size={size} delay={i * 60} />
+      ))}
+    </div>
+  );
+}
+
+// ── Result label badge ────────────────────────────────────────
+function ResultBadge({ result, variant }) {
+  if (!result) return <div className="result-badge placeholder">—</div>;
+  const tone =
+    result.kind === 'cee-lo' || result.kind === 'trips' || result.kind === 'pair6' ? 'hot' :
+    result.kind === 'bust' || result.kind === 'pair1' ? 'cold' :
+    result.kind === 'dead' ? 'mute' : 'neutral';
+  return (
+    <div className={`result-badge tone-${tone} ${variant || ''}`}>
+      {result.label}
+      {result.kind === 'point' && <span className="point-val">{result.point}</span>}
+    </div>
+  );
+}
+
+// ── Zone (House or Player) ────────────────────────────────────
+function Zone({ title, subtitle, dice, rolling, result, active, glyph, side }) {
+  return (
+    <div className={`zone ${active ? 'zone-active' : ''} zone-${side}`}>
+      <div className="zone-header">
+        <div className="zone-title">
+          <span className="zone-glyph">{glyph}</span>
+          <span>{title}</span>
+        </div>
+        <div className="zone-sub">{subtitle}</div>
+      </div>
+      <div className="zone-body">
+        <DiceRow dice={dice} rolling={rolling} size={72} />
+      </div>
+      <div className="zone-footer">
+        <ResultBadge result={result} />
+      </div>
+    </div>
+  );
+}
+
+// ── VS divider ────────────────────────────────────────────────
+function VsDivider({ phase, outcome }) {
+  const label =
+    outcome === 'win' ? 'YOU WIN' :
+    outcome === 'lose' ? 'HOUSE WINS' :
+    outcome === 'push' ? 'PUSH' :
+    phase === 'idle' ? 'READY' :
+    phase === 'house-rolling' ? 'HOUSE ROLLING' :
+    phase === 'point-set' ? 'BEAT THE POINT' :
+    phase === 'second-window' ? 'LIVE BETS OPEN' :
+    phase === 'player-rolling' ? 'YOUR ROLL' :
+    'VS';
+  const tone =
+    outcome === 'win' ? 'win' : outcome === 'lose' ? 'lose' : outcome === 'push' ? 'push' : 'neutral';
+  return (
+    <div className={`vs-divider vs-${tone}`}>
+      <div className="vs-line" />
+      <div className="vs-label">{label}</div>
+      <div className="vs-line" />
+    </div>
+  );
+}
+
+// ── Amount input ──────────────────────────────────────────────
+function AmountInput({ value, onChange, label = 'Wager', disabled }) {
+  return (
+    <div className="amount-block">
+      <label className="field-label">{label}</label>
+      <div className={`amount-input ${disabled ? 'disabled' : ''}`}>
+        <span className="coin-dot" />
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(Math.max(0, Number(e.target.value)))}
+          disabled={disabled}
+          step="0.5"
+          min="0"
+        />
+        <div className="amt-btns">
+          <button onClick={() => onChange(Math.max(0, value / 2))} disabled={disabled}>½</button>
+          <button onClick={() => onChange(value * 2)} disabled={disabled}>2×</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Side bet chip ─────────────────────────────────────────────
+function SideBetChip({ keyName, def, amount, onSet, disabled, resolved }) {
+  const active = amount > 0;
+  const tone = resolved === 'win' ? 'chip-win' : resolved === 'lose' ? 'chip-lose' : '';
+  return (
+    <button
+      className={`sidebet-chip ${active ? 'active' : ''} ${tone}`}
+      disabled={disabled}
+      onClick={() => {
+        if (amount > 0) onSet(0);
+        else onSet(1); // default 1 unit
+      }}
+    >
+      <div className="sb-top">
+        <span className="sb-label">{def.label}</span>
+        <span className="sb-odds">{def.odds}×</span>
+      </div>
+      <div className="sb-bottom">
+        {amount > 0 ? <span className="sb-amt">▴ {amount.toFixed(2)}</span> : <span className="sb-place">tap to bet</span>}
+        {amount > 0 && (
+          <div className="sb-steppers" onClick={(e) => e.stopPropagation()}>
+            <span onClick={() => onSet(Math.max(0, amount - 1))}>−</span>
+            <span onClick={() => onSet(amount + 1)}>+</span>
+          </div>
+        )}
+      </div>
+    </button>
+  );
+}
+
+window.CeeLoUI = { Die, DiceRow, ResultBadge, Zone, VsDivider, AmountInput, SideBetChip };
+
+</script>
+<script type="text/babel">
+// ─────────────────────────────────────────────────────────────
+// Cee-Lo app — orchestrates the round and renders everything
+// ─────────────────────────────────────────────────────────────
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+const { Die, DiceRow, ResultBadge, Zone, VsDivider, AmountInput, SideBetChip } = window.CeeLoUI;
+const {
+  rollDice, evaluateRoll,
+  isInstantWin, isInstantLoss, isPoint, isDead,
+  comparePlayerVsHouse,
+  SIDE_BETS, resolveSideBet, mainBetPayout,
+} = window.CeeLo;
+
+// Tweakable defaults (persisted by host)
+const TWEAKS = /*EDITMODE-BEGIN*/{
+  "animationSpeed": 1.0,
+  "showSideBets": true,
+  "showSecondWindow": true,
+  "forceOutcome": "off"
+}/*EDITMODE-END*/;
+
+const SPEED_MS = (base) => Math.round(base / (TWEAKS.animationSpeed || 1));
+
+// ── Phases ─────────────────────────────────────────────────
+//   idle → bet-placed → house-rolling → [point-set → second-window →]
+//   player-rolling → resolved
+const PHASES = {
+  idle: 'idle',
+  betPlaced: 'bet-placed',
+  houseRolling: 'house-rolling',
+  pointSet: 'point-set',
+  secondWindow: 'second-window',
+  playerRolling: 'player-rolling',
+  resolved: 'resolved',
+};
+
+// ── Roll until non-dead helper (with a limit to be safe) ──
+function rollUntilValid() {
+  const attempts = [];
+  for (let i = 0; i < 40; i++) {
+    const dice = rollDice();
+    const r = evaluateRoll(dice);
+    attempts.push({ dice, r });
+    if (!isDead(r)) return { dice, r, attempts };
+  }
+  const last = attempts[attempts.length - 1];
+  return { ...last, attempts };
+}
+
+// ── Force-outcome helpers for demo tweaks ─────────────────
+function forceDice(outcome) {
+  switch (outcome) {
+    case 'win':    return [4, 5, 6];
+    case 'lose':   return [1, 2, 3];
+    case 'push':   return [3, 3, 5]; // will be matched by partner force
+    case 'headcrack': return [4, 5, 6];
+    case 'trips':  return [6, 6, 6];
+    case 'bust':   return [1, 2, 3];
+    case 'point':  return [3, 3, 4];
+    default: return null;
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+function App() {
+  const [balance, setBalance] = useState(1000);
+  const [wager, setWager] = useState(10);
+  const [sideBetAmts, setSideBetAmts] = useState({}); // {key: amount}
+  const [phase, setPhase] = useState(PHASES.idle);
+
+  const [houseDice, setHouseDice] = useState([1, 1, 1]);
+  const [houseResult, setHouseResult] = useState(null);
+  const [houseRolling, setHouseRolling] = useState(false);
+  const [houseAttempts, setHouseAttempts] = useState(0);
+
+  const [playerDice, setPlayerDice] = useState([1, 1, 1]);
+  const [playerResult, setPlayerResult] = useState(null);
+  const [playerRolling, setPlayerRolling] = useState(false);
+  const [playerAttempts, setPlayerAttempts] = useState(0);
+
+  const [outcome, setOutcome] = useState(null); // 'win' | 'lose' | 'push'
+  const [payoutBreakdown, setPayoutBreakdown] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [showRules, setShowRules] = useState(false);
+  const [flash, setFlash] = useState(null);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [tweakVals, setTweakVals] = useState(TWEAKS);
+
+  // ── Tweaks live-update ─────────────────────────────────
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setTweaksOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  useEffect(() => {
+    // Apply tweaks live
+    TWEAKS.animationSpeed = tweakVals.animationSpeed;
+    TWEAKS.showSideBets = tweakVals.showSideBets;
+    TWEAKS.showSecondWindow = tweakVals.showSecondWindow;
+    TWEAKS.forceOutcome = tweakVals.forceOutcome;
+  }, [tweakVals]);
+
+  const setTweak = (key, val) => {
+    setTweakVals((p) => ({ ...p, [key]: val }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: val } }, '*');
+  };
+
+  // ── Side bet helpers ───────────────────────────────────
+  const totalSideBets = Object.values(sideBetAmts).reduce((a, b) => a + b, 0);
+  const setSideBet = (k, amt) => {
+    setSideBetAmts((p) => {
+      const n = { ...p };
+      if (amt <= 0) delete n[k];
+      else n[k] = amt;
+      return n;
+    });
+  };
+
+  // ── Start round ────────────────────────────────────────
+  const canPlaceBet = phase === PHASES.idle && (wager > 0 || totalSideBets > 0);
+  const totalStake = wager + totalSideBets;
+
+  const placeBet = async () => {
+    if (!canPlaceBet) return;
+    if (totalStake > balance) { setFlash({ type: 'err', msg: 'Not enough balance' }); setTimeout(() => setFlash(null), 1500); return; }
+    setBalance((b) => b - totalStake);
+    setPhase(PHASES.betPlaced);
+    setOutcome(null);
+    setPayoutBreakdown(null);
+    setHouseResult(null);
+    setPlayerResult(null);
+    setHouseAttempts(0);
+    setPlayerAttempts(0);
+
+    // House auto-rolls after short beat
+    await sleep(SPEED_MS(450));
+    await houseRoll();
+  };
+
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // ── House roll (auto) ──────────────────────────────────
+  const houseRoll = async () => {
+    setPhase(PHASES.houseRolling);
+    setHouseRolling(true);
+
+    // Keep rolling until non-dead (with visible reroll attempts)
+    let attempts = 0;
+    let finalDice, finalR;
+    for (let i = 0; i < 10; i++) {
+      attempts++;
+      setHouseAttempts(attempts);
+      await sleep(SPEED_MS(900));
+      let dice;
+      // Forced outcomes for demo
+      if (i === 0 && TWEAKS.forceOutcome !== 'off') {
+        const forced = forceDice(TWEAKS.forceOutcome === 'push' ? 'point' : (TWEAKS.forceOutcome === 'win' || TWEAKS.forceOutcome === 'player-headcrack' ? 'point' : TWEAKS.forceOutcome));
+        dice = forced || rollDice();
+      } else {
+        dice = rollDice();
+      }
+      const r = evaluateRoll(dice);
+      setHouseDice(dice);
+      if (!isDead(r)) {
+        setHouseRolling(false);
+        setHouseResult(r);
+        finalDice = dice; finalR = r;
+        break;
+      }
+      // dead — brief pause then reroll
+      await sleep(SPEED_MS(450));
+    }
+    await sleep(SPEED_MS(600));
+
+    // If house instant-win/instant-loss, resolve now
+    if (isInstantWin(finalR) || isInstantLoss(finalR)) {
+      // Player doesn't roll — but we still visually set player "blank"
+      await resolveRound(finalR, null);
+      return;
+    }
+
+    // Point set — offer second betting window (if enabled), then prompt player to tap
+    if (isPoint(finalR)) {
+      setPhase(PHASES.pointSet);
+      if (TWEAKS.showSideBets && TWEAKS.showSecondWindow) {
+        setPhase(PHASES.secondWindow);
+      }
+    }
+  };
+
+  // ── Player roll (manual tap) ───────────────────────────
+  const playerRoll = async () => {
+    if (phase !== PHASES.pointSet && phase !== PHASES.secondWindow) return;
+    setPhase(PHASES.playerRolling);
+    setPlayerRolling(true);
+
+    let attempts = 0;
+    let finalDice, finalR;
+    for (let i = 0; i < 10; i++) {
+      attempts++;
+      setPlayerAttempts(attempts);
+      await sleep(SPEED_MS(900));
+      let dice;
+      if (i === 0 && TWEAKS.forceOutcome !== 'off') {
+        // force player outcome to align with tweak
+        if (TWEAKS.forceOutcome === 'win') dice = [4, 5, 6];
+        else if (TWEAKS.forceOutcome === 'lose') dice = [1, 2, 3];
+        else if (TWEAKS.forceOutcome === 'push' && houseResult?.kind === 'point') dice = [3, 3, houseResult.point];
+        else if (TWEAKS.forceOutcome === 'trips') dice = [6, 6, 6];
+        else if (TWEAKS.forceOutcome === 'headcrack') dice = [4, 4, 6];
+        else dice = rollDice();
+      } else dice = rollDice();
+      const r = evaluateRoll(dice);
+      setPlayerDice(dice);
+      if (!isDead(r)) {
+        setPlayerRolling(false);
+        setPlayerResult(r);
+        finalDice = dice; finalR = r;
+        break;
+      }
+      await sleep(SPEED_MS(450));
+    }
+    await sleep(SPEED_MS(600));
+    await resolveRound(houseResult, finalR);
+  };
+
+  // ── Resolve & settle ───────────────────────────────────
+  const resolveRound = async (hR, pR) => {
+    // Determine main bet outcome
+    let mainOutcome = 'lose';
+    if (pR === null) {
+      // House alone decides
+      if (isInstantWin(hR)) mainOutcome = 'lose';
+      else if (isInstantLoss(hR)) mainOutcome = 'win';
+    } else {
+      mainOutcome = comparePlayerVsHouse(hR, pR);
+    }
+
+    setOutcome(mainOutcome);
+
+    // Payouts
+    const mainMult = mainBetPayout(mainOutcome, pR || hR);
+    const mainPayout = wager * mainMult;
+
+    // Side bets — resolve against (house, effective player)
+    // If player didn't roll, treat "player's outcome" as the house's (for aceOut/headcrack
+    // bets referring to house auto-resolution). To keep semantics clean, side bets are
+    // evaluated against the last-known roller: if house instant-won/lost, side bets
+    // reference the house roll.
+    const effectivePlayer = pR || hR;
+    const sideRes = {};
+    let sidePayoutTotal = 0;
+    for (const k of Object.keys(sideBetAmts)) {
+      const amt = sideBetAmts[k];
+      const hit = resolveSideBet(k, hR, effectivePlayer);
+      sideRes[k] = hit ? 'win' : 'lose';
+      if (hit) sidePayoutTotal += amt * (1 + SIDE_BETS[k].odds);
+    }
+
+    const totalReturn = mainPayout + sidePayoutTotal;
+    setPayoutBreakdown({
+      mainOutcome, mainMult, mainPayout, sideRes, sidePayoutTotal, totalReturn,
+      netChange: totalReturn - totalStake,
+    });
+
+    setBalance((b) => b + totalReturn);
+    setPhase(PHASES.resolved);
+
+    // History
+    setHistory((h) => [
+      {
+        id: Date.now(),
+        house: hR, player: pR,
+        outcome: mainOutcome,
+        net: totalReturn - totalStake,
+        wager: totalStake,
+      },
+      ...h,
+    ].slice(0, 24));
+
+    // Flash banner
+    const flashMsg = mainOutcome === 'win'
+      ? (pR?.kind === 'cee-lo' ? 'CEE-LO!' : pR?.kind === 'trips' && pR.value === 6 ? 'TRIP SIXES!' : pR?.kind === 'trips' ? 'TRIPS!' : pR?.kind === 'pair6' ? 'HEADCRACK!' : 'WIN')
+      : mainOutcome === 'lose' ? (pR?.kind === 'bust' || pR?.kind === 'pair1' ? 'ACE OUT' : 'HOUSE WINS') : 'PUSH';
+    setFlash({ type: mainOutcome, msg: flashMsg });
+    setTimeout(() => setFlash(null), 2600);
+  };
+
+  // ── Reset for next round ──────────────────────────────
+  const nextRound = () => {
+    setPhase(PHASES.idle);
+    setHouseDice([1, 1, 1]);
+    setPlayerDice([1, 1, 1]);
+    setHouseResult(null);
+    setPlayerResult(null);
+    setOutcome(null);
+    setPayoutBreakdown(null);
+    setSideBetAmts({});
+    setHouseAttempts(0);
+    setPlayerAttempts(0);
+  };
+
+  // ── Derived ─────────────────────────────────────────────
+  const houseActive = [PHASES.houseRolling, PHASES.pointSet, PHASES.secondWindow].includes(phase);
+  const playerActive = [PHASES.playerRolling, PHASES.pointSet, PHASES.secondWindow].includes(phase);
+  const canTapToRoll = phase === PHASES.pointSet || phase === PHASES.secondWindow;
+
+  const houseSubtitle =
+    phase === PHASES.houseRolling && houseAttempts > 1 ? `RE-ROLL · attempt ${houseAttempts}` :
+    phase === PHASES.houseRolling ? 'rolling the bones…' :
+    houseResult ? (isPoint(houseResult) ? `point to beat: ${houseResult.point}` : houseResult.label) :
+    'waiting on your bet';
+
+  const playerSubtitle =
+    phase === PHASES.playerRolling && playerAttempts > 1 ? `RE-ROLL · attempt ${playerAttempts}` :
+    phase === PHASES.playerRolling ? 'shake \'em up…' :
+    canTapToRoll ? 'TAP DICE TO ROLL' :
+    playerResult ? playerResult.label :
+    phase === PHASES.resolved ? '—' :
+    phase === PHASES.idle ? 'place your bets' :
+    '—';
+
+  // ── Phase-gated bet locks ──────────────────────────────
+  const mainBetLocked = phase !== PHASES.idle;
+  const sideBetLocked = phase !== PHASES.idle && !(phase === PHASES.secondWindow && TWEAKS.showSecondWindow);
+  // In second window, only headcrack / ace-out / over-under / trips can be ADDED (bets on player's upcoming roll)
+  const liveAvailable = new Set(['headcrack', 'aceout', 'tripsix', 'over3', 'under3', 'exact2', 'exact3', 'exact4', 'exact5']);
+
+  // ── Render ──────────────────────────────────────────────
+  return (
+    <div className="app-root" data-screen-label="Cee-Lo table">
+      {/* ── Top bar ── */}
+      <header className="topbar">
+        <div className="brand">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgQAAAJICAYAAAAemPyBAAAACXBIWXMAACxLAAAsSwGlPZapAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAAJCFJREFUeAHt3W1yHUW2LuCVW3bE7QhDixG0GEGbESBGAIwAGAEy9/wH/759sDwC7BEcMwLECFCP4KhHgMA+cTrC0s5bpdqyjbGsD2d95vNEGMmy+fLWrnpzrZVZKfiTvZy3I/69vRXP7+bIOxFbf2u+vN19Hs2vtb/eSjsBwITko+5jOvuYzj7mf0Wsj1exOmx+fvz/0p3D4E9SVK69+W/F090c6W7z0783N/27bvQAi9eEgzhqPv5zFXFwEncO91M6jopVFwjaALCKp59FrD7Osd518wdgo60gND/WP57G7SYg/OUoKlJFIPiP/HR3HdEEgGiCQNwNALhcW0X4cSvSkxraDIsNBF0ISJ82LYAv46zvDwA3lY6aG+aTrYjHSw0HiwoEXTvg2dcqAQD0qKkc5IfruH2wpLbCIgLBpiVwHgQAYBAp0qOmavBwCVWDWQeCNgicRnzbfLobADCeg6Zq8Pj79P6jmKlZBoJv8u9f5lg1QeDsXAAAmIh21mB9f47BYFaBoKsIpB8EAQCmbX7BYBaBQGsAgJk6yHHrqzkMH046EHS7Bv7nwWbrIADMUjt8uI6t+1MOBpMNBPfys6+b1sB34QwBABZh2m2EyQWCvfy/OylOfgjtAQCWaZJthFVMSFsVaMLALyEMALBcu+297pv8215MyCQqBKoCANRoSrMFoweCzQ6C/wqzAgBUKR3liM/3Rz7tcNSWwV5++m0TBn4KYQCAauWmSp6bFsLTb2NEo1QINg8h+sGzBwDgpaaFsP99unMvRjB4IOjmBU5/ctogALzRYY5bnw89VzBoINjLz+6ms3kBYQAALtbOFWx9MmQoGCwQdGEgmxcAgCsZdthwkKHCe/nZF+3ARAgDAHBFZ8OGP7UL6hhA74GgDQPN/9SjAACua7tdUHf30n712jIQBgCglPTlg3TncfSkt0AgDABAUcc50id9zRT0Egg2A4S/BABQUm+hoHgg2DyXwAAhAPSjCQW3Piq9JbHoUOHLQ4eEAQDoyXZ7r23vuVFQsQpBexxxiv/5xaFDADCIwxwnTfvgg+MooFiFoH02gTAAAIO5u4rbxR6IVCQQtE8t9KAiABhWjrz3Tf5tLwp455bBf+Snu5tHGAMAI9iK+OQf6b2DeAfvFAg8uRAApqB97sHzj95lnuCdWgYpTswNAMDo8s4qbv0Q7+DGgaCdG2g+7AYAMLp2lu9d5glu1DLYHD703wEATMmNDy26UYVgc/gQADAt2107//quHQju5WdfmxsAgMna/Sb//mVc07VaBnYVAMAsNK2Dkw+vs+vgWhWCVZx+KwwAwORtX/cUwytXCAwSAsC85EgfXfVRyVeuEBgkBIB5SZEfXPX3XikQdMMJWgUAMDO77SMGrvIbrxQIcqyKPU0JABjOacSV7uGXBgLVAQCYtStVCS4NBKoDADBvV6kSvDUQqA4AwCJcWiV4ayDIkb4IAGD2LqsSXBgI9roksRsAwBK8tUqwuvgXVAcAYEmaKsFnF/3aG08qdCohACzShc84eGOFYBXPdwMAWJr2GQdfvukX3hgIbDUEgGXKkT9909f/FAj28rO7thoCwGLtdvf6P1q94QtfBwCwWKvIn/35a6/JthoCwKK96ZyhPwSC7uwB7QIAWLa883rb4A+BIL1lfyIAsByvtw1ebxl8HADA4uXX7vkvDiZyGBEA1CXHyQfnhxS9qBA4jAgAarO1e/7ZKy2DlXYBAFQkRdo9//xFIMiR7wYAUJH0ohhwNkOwl3/dTnHr1wAAqnI+R7CpENxSHQCACt3aZIDV5i+7AQBUZx3pZSBo/D0AgBqdZYCzQJAjdgIAqE6TAf5QITBDAABV6p5hlNqHG6TIvwQAUKUctz5cbcV6JwCAij2/uzqN1U4AANVaxWp7tYq8HQBAxfLOKm+GCQCAWqW/rdq/BABQrRzrD1YBAFQu/XUVWgYAULm0o0IAALQnFaadAACqpkIAANXL2wIBACAQAABaBgBACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABA41bAO8lH3cd03Pyl/bHdfK35kba7z4HCmvdZPu4+TUfdx7yz+flOwA0JBFxFe/E5bH78M0U+XMeq+fz50X764Phtf9Ne/rUJBLd3ItY7q0h3c8THzZfvhqAAV/Ha++72QcS/j6/2vrt1tw3mKdJu86W/Nz92Ay6R7uWnOeDP2ovO4+ab40nEyeFlF6Hr2MvPmovV6W6K1RfRBQSgc9C8535uP+6n9w6ioL38tHnPxWfNZf/TlxUFeEkg4FUvQkDpi9FFmtXMTrOa+bJZyXzhIkWljpv33MPmffBoP/3lKAbQhvIU672I1cfed5wTCGhtLkgn+yUrAde1l39vg8HXoWpAHQ5WkR/+Z3r/SYyoe9+tvhUMEAiqlo5yrO/vp/cfxYR0pc30gwsUC9W2Be4PVYW7KsEAgaBOk6gIXMYFimU5C+D39keuCFzG+65eAkFlUsSTdZx8NeUg8LqmYvBd89/9bcBMtRWBqQfwV7WzPSm2vouz2R5qIRBUo12d5K+mVqa8qu4CdfsnqxbmJR3meN4G8MOYIe27uggEFZhjVeAiqgXMyMMH6b29mDnVgnoIBAuXm5d4P93ZjwWxamHi2hmdz+dajbvIXv5tL8XqQbBYnmWwWG2LID5ZWhhotRfapgz7yctjW2Eq2hbByUdLCwOt/fTX/eb/7UPvu+USCBapDQPPP1niRelc0/5o/x8/irPdEjAF+XH3vvvgKBZq875rwnjMciaCt9MyWJ5m9Xzy+RLmBa7KXAFja77/7n+f3vsuKtE+L2EVt37IZ0chsxQCwaLkxw/S+19GhYQCxlJbGHhVc/9oW5JfB4ugZbAY9YaBVtMe+a7b6w3DqTkMtNpdFN53yyEQLELdYeCcUMCQag8D57zvlkMgmD1h4FUuTgxBGPij/e7PwoDvzAkEs5YOhYE/EwrokzDwZt0hTPlxMFsCwWyl8+0/vIEVCz15KAxcLMdpezKjLYkzJRDM0vk5A/VsLbyJzbGxBwFFtBW5+R9F3Kf2mpTjxKFhMyUQzM/x0g8/Kak9k8HFiXd3FsI/Dy7VhYKz6qUFy8wIBDOTI90XBq7OxYkChPBr6k40zF8FsyIQzEg7zLTEZxP0bXNxuhdwA0L4zeyn958Y7p0XJxXORjp6kO58GNyYU9W4gUU8wnhMzfvup+bDbjB5KgTzcGxHwbvbXNhNQHNFbQgXBt5VjpO2daBlNwMCwQy05W4lyzK6IUMXJy4nhJfRtezCQOYMCAQTlyI9anpxj4IiuovTWl+Tt+rmdYTwUjaPYncuyMQJBJOWjtbx3M2rsP3013aW4CDgzQ4cPlReU537zhbgaRMIJqxdyVql9ENfk4tsvjcorNsCbCvilAkEE6VV0C+tA95Eq6BfWgfTJhBM07FWQf+0DvijdKRV0L+udaA6N0UCwQQ5CGU4Dk7hnEn4YXStA9W5KRIIJicdOY1wOEqYtLoW3R1nVAxEdW6aBIKJWcXaEbsDU8KsnhbdCFTnpkcgmJB2lfKf6f0nwaC6EqYqQa1S89pr0Q2vq87lx8FkCAQTYpUyppN9e6RrZJBwTDlOvwvVuckQCCai62FapYzFoFOdvObj2hxrrDo3EQLBRKgOjG9z7sNBUIl2gNdZH+Nrq3OqBFMgEEyA6sB0GHSqh+rANJjhmQ6BYAJUB6Zjsw3xIFg41YFpUSWYAoFgZKoD06NKsHyqA9OiSjANAsHIVAemp6sS2HGwXKoD06RKMDaBYESqA9NlBblcXttpUiUYn0AwItWBKTttD4iyWlkc1YFpO3kUjEYgGM+B6sB0Wa0sU4pwEuiEba6JB8EoBIKR5MhuNpOnp7k0TVXO+27iDPWORyAYxVnZ0kpl4toqQfPBWesLYWZnHmz9HY9AMAJDTfORlZgXY+VBOrORI/0YDE4gGMXpQTALVitLkY7+0b2WzMLzR6FdNziBYGDKlvNjtTJ/qnLzol03DoFgYMqWc2S1Mn+qcnOjXTc8gWBQypZzZLUyb6py86RdNzyBYFBZ6XmmrFbmax1r77uZat53PweDEQgGlLt97czQZrWibTA7tvjOm2vmkASC4TiZcOacXDg/Scl51jbtuoNgEALBQLJhwiU4CGbFEO/82eUzHIFgMKac565rG+SjYCYM8S7D2S4fBiAQDEO7YCGa1YoV50xoFyyDtsFwBIIBJCWvJTkIZkG7YDm0DYYhEAxgHc9NOS+E3QZzoV2wLNoGQxAIepcOtQsWx8pz4rQLlkXbYBgCQe+ygzUWxiFF0+cwouVxSFH/BIKebbl5LNDJYWgbTJxdPQt0EPRKIOjXsT7m8mzKl4fBVB1sXiMWxPxO/wSCXmkXLJWp5+myq2fJPA+mTwJBj/Sal8zOkalaKy0vlmHRfgkEvdLHXKrNzhHly+k53k93tHMWah2ngniPBILetE9Zs91w2ZQvp0ebbsm62RDHh/dFIOiJ0tby5VhZiU5MitVBsHBmRPoiEPRkHWsrlcUzRzA15geWL0UWxHsiEPTG6nHpzBFMjvmBCpgj6I9A0A8XpkpoDU2K91wFzBH0RyDohcGmWqwjea0nIjnatiZe6x4IBD1IkaxUqqGfORUr1ZpqGOjth0DQAxemmpy4ME3EideiIoJ4HwSCHrgw1cNzDabi7DHjBjyr4RrbB4GgOBem+uR/BiNb/yuohiDeD4GgOBem2uhnjs+BRDUSxEsTCAozUFgj/cyxrbwG1RHEyxMIClu7MFVIP3Ns5nZq5FpbmkBQ3OooqIqDUkZ3bG6nRkJgaQJBWU4orJRW0aj82VdoEwIFwYIEgqLSUVClHGGYdDyGy+p1FBQjEBRlh0GtPIFtPEkQr5idBiUJBAUpG9crKV2Oxg6DetlpUJZAUJAdBvU6jVOv/UhOIgljldqK9VFQjEBQ0C0Xpmrtpw+OQpVgFAZ56yWIlyUQFGQvdO2yQDA48wOV854rSCAox17oypkhGYPzH2rmDJCyBIJirFRqZ+vh8OwwILRqixEIilEurl12cxpBFsKqZ+thKQJBOb4pK7eKtVA4OCEMFYJSBIJC7ENn7eY0uJX+cfVU5soRCIrxTcnJUTAoZxCgMleOQFCIlQqhSjSCLX/mlVOZK0cggEI8fW14++kvR0HlVOZKEQgKOYlbRwF2mwzJnzUt3weFCASFWKnQ0dMejlIxLypzFCAQQFkuToNRjeGcGa4SBIIirFQ456AcYJ4EgjKsVGBgji3mJa26EgSCIpQu6bhJDSdH/i2g4xpcgEAAzJLTQXlJq64EgaAIKxU6a6VLYKYEggJSrH4NCMeoDkv4gpIEAmCuBAI2hMMSBIICDDcBjMc8SRkCQQG+GTnnQSvAXAkEwCytzWtAUQIBMEu39I2hKIEAABAIAACBAAAIgQAACIEAAAiBAJipk8jbARQjEACztIqVQAAFCQQAgEBQRvpbQLRvqLwTADMkEAAwa1kQL0IgAGbKTQBKEggKyLH+IOBM2gmAGRIIikh/DWBQOcIuAzbMcZUgEBSRXJg44yY1nCSIQ1ECQRluAmw4LAdG4H1XgEBQhJsAHavW4Zgs5yXX4BIEgjJ8M3JGy2BIWnWcSzvBOxMICtnL/7sTIBAMyZ81FCQQQFk7wUCUiWkXY7/uBEUIBIXcipOdAKvWIW03NwN/3tW7tRMUIRAUso60E1TNSmUM/0cggEIEgnJcmKpnpTI0lTk8UKwcgaAQW6BgeCpz2GFQjkBQiP3nNN8Fd4OhqcxVzmKsHIGgkBzhZlC5lan3wbkZ4DkG5QgE5bgZ8PdgYAIBrr2lCATFuDDVzimFY1hZHaI6W4hAUJDTCqvnwjQ4QbxmzqEoSyAo6rkbQqU2FyYXp+E5nKhqt1xzCxIIClrFaieo1O2dYCT+7GvlDIKyBIKCTDzXayvWO8EoVlo1FUs7QTECQVECQa2yMwhG0wRxf/b1srOnIIGgqJVvznp57UcjiNcqe7poUQJBUXnHgFOdXJjGJIhXTHWoIIGgOANOlXJhGo0gXqO9/Mx7rjCBoDADTvVxYZoCQbw2BnnLEwgKM+BUHxem8Qni9VlH2g2KEgiKSx8HVXFhGp8gXiWzI4UJBMWZeK6QC9P4vAb1EQILEwjK2/ZMg+q4MI3Pa1CRzdyOQdLCBIIerOJ0N6iCC9NkbBvurIe5nX4IBD3Qz6yHC9N0GCysh7mdfggEvTBYWAsXpknxvquHmZEeCAS9yHcdlFINF6aJyBG7QS12g+IEgp7c8pzuxduEvt1gIpxYWIO9/HQ36IVA0JPTiM+ChRP6pmdrN1g4Txbti0DQH6XkhUtC3+QkMx2LlyJ/GvRCIOjPrvLl4gl9k2OgtwIqBD0RCHpkjmC5zA9MlYHeJdvMD3h9eyIQ9MgcwXJt6VVP1ipue98t1EoI75VA0Cvly6XKsdLHnC7vu4XKXtteCQS9Ur5cKnvepytHViFYIG26/gkEPWvKl18Gi9I9vMpTLSds+z/sVV+cVWwJej0TCHqWbZFZnFU83w0mbW0luUAr7YKeCQT90zZYmBzpi2DS9JqXRyuofwJB/7ZtP1yOrl1g9TkDzgFZENsNhyEQDGBtRbkY2gXzYX5nOVauoYMQCAag1LUkyUzITJjfWQ67eoYhEAzD1PMCtCXo7LCpOdE2WICuXWBXzxAEgoE4tXD+bHuaH22D+dMuGI5AMJwvrFbmze6C+dE2mD/tguEIBMPZdv79fNldMFvaBjOmXTAsgWBA60hfB7Nkd8F8reLWXjBL2gXDEgiGZbUyUzlW3waz1JScBfEZaqtyTcvny2AwAsHArFbmZy8/u6tsOWt2+cyQqtzwBIKBZfvYZ2dlhTl7a6/h7GQt1sEJBIPLd61W5qM7e8DBUnOXtetmZXNUsSPfByYQjOA0Qj96JjZnD7iRzN+2dt18GCYch0AwDquVmTBMuByGC+fBMOF4BIKRWK1Mnz3Qi2O4cAYME45HIBhJu1pRJZg2w4TLo103fapy4xEIxqOnOWFd2dLzJxZoV5Vgur7Jv3+pKjcegWBEzsafrlWcWqUslCrBdKkOjEsgGFXe6RIxU2KoafF2N8+mYEJUB8YnEIysScT61BOjOrB8XuPpUR0Yn0AwOgcVTYnqQB3a11iVYDpUB6ZBIJiA00g/BJNg5VgPr/V0qA5Mg0AwCWYJpkB1oC6qBNOgOjAdAsFEtAnZuQTjsmKsT4oT1bmRqQ5Mh0AwGXnHuQTjUR2olnMJRqQ6MC0CwYQ4vXA8Vor1ci7BOLoQrjowJQLBtGyv4rY3yMA28xu7Qa12zfCM4eQL1YFpSffy0xxMSo700X66cxgM4l5+9t8uTNU7znHy4X764DjoXVsdaKpy/x1MigrBBKXID4JB7OWn3woDhOrcoAzwTpNAME1NCfM3A4Y961Yp8V1AnG1D3NvLz+4GvWrbMwZ4p0kgmCjbEPvXlCz/K+AVqnP9Mkg4bQLBdLWPRzb53pN7+Vn7DAmrQV6nOtejrlWgRTdVAsGE5YjPmhuXRyQX1p1Ol78LeIOuOucEw9K0CqZPIJi8vO/iVFaK07ZVoB3DRba1k8rSKpgHgWD6th2aU85mV4FWAZe5+01+Zp6gEK2CeRAI5kFfs4B2gtyuAq6q3XXgWON314ZwrYJ5EAhmoim3PXBxurnNFkNlYK6lfTS5lt3N2do7LwLBjLg43dwqTh4oWXJ9eUfL7ma6MHD6UzAbAsGsnF2crHKvqStZxmcBN7NrnuD6uiAlhM+JQDA/hp2uoT1vQMmSd9XOE5jjubpueNcDw+ZGIJih7uL01BaeS3TH0Ob9gALM8VxNGwaE8HkSCGaqKYF/59CiixkipA+nzfeU5x1crL0mCQPzJRDMWn70f/PveuOveTnMpH9JcdvpLBQY7n3dpiL3KJgtgWDm1mc7D6xYzgkD9C+ffY8JBS91Z3xkOwpmTiCYv+32jSgUCAMMSSg490oYcBz4zAkEy1B9KBAGGJ5QIAwsi0CwHG0o+KXGQUNhgPHUGwra+SVhYFkEgsXJj2raktitUE5+EQYYz9mBYb/UtCWxPd9jHclTQxdGIFigdktiDaGg2+JkhcIkbJ9G/FTD4UWbJ4Y632OB0r38NAdLdZjj1uf76S9HsTBN4HnQfOM6OY7JSZH2v0937sXC7OXctCWftVWB3WCRBILFS0dbkb/6R3rvIBagmxc4e9jMbsBkpaMcW58sJYy37ZD24Wpac8umZbB4eacrZc6/hdC1CNp5AWGAqevmCpbQQmivHe01RBhYPhWCqsxz1aIqwJw1LYRH69i6P7f33aYq0D423MFnlRAIKjSnC9Q33aOL21WWwUHm7DhF7H+f3rsfE9fOCqzi2bdmdOojEFQrHaXIj6Z6gdKzZJna9936/vfp/UcxMZsg8LUAXi+BoHrdBWodtw+mUDHogkB4ljoLN51gIAhwTiBgo71AxcEYrQQXJOo1XiBvD/VaRf7U+45zAgFvctC0Ex73eZHqQsDTz3Kk9qjl3YDKNYH8SdMi+3Ed7z3ZT+k4etC9737/Msfq0/C+4zUCAZc5TJGagLD++TRuH940ILQXolvx7O464uPcXYh2A7hI856Ln1fNx5O4c3jTgNDu0NmK53ebANC87/Ju8yU7BriQQMB1tRemJiScffxnxLr5+PrFKjflx1XzI/2t/TyfbVtKOwHc1OZ9l46a99S/Lnvfde+52AmtAK5BIAAAnFQIAAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABACAQAQAgEAEAIBABApKMmEOSjAACqpkIAABw3gSAdBwBQsdwGghAIAKBq+bd2huBfAQBUK8XqVy0DAKhe/tcqRzoKAKBi6Wi1FeujAACqtYp8tDqN08MAAKp1EskuAwCo3X66c7jaTx8cO60QAGqVzjoFZycVps1PAIDarM+OHzgLBOtIPwcAUJ0Uq4P241kgsNMAAOq0ivyyZXAapwcBAFTnJE5eBgKDhQBQo3TYZYA/Pv7YHAEAVCW/uPe/CAQp4iAAgGrkyAfnn78IBOs4fRIAQEVezhC+CASbHoLzCACgDgfn8wOtV2cImtJB/BgAwOKlSH+4569e+/WDAAAWb/3aPT+9/hvu5ae/Nh+2AwBYqHT0IN358NWvrN7wux4HALBg+U8jAn8KBDnCbgMAWLAcJ/uvfy296Tc2bYNfmg93AwBYmHTYtAs+ev2rb2oZ2G0AAAuVY/3wTV9fvfm3n5USjgMAWJLjuOCBhm8MBO1BBY4yBoBlSZGeNPf4ozf92uqiv2kd8TAAgMVYx/P7F/3ahYFgP713EKoEALAUBxdVB1qrt/2dOeJ+AACzt3XJPT3FJWxBBIC5+/PJhK97a4WglSObJQCAGcuxvrTif2mFoKVKAABzdXl1oHVphaCVm0wQAMDsbEX+6iq/70qBwI4DAJifpg3w5B/dPfxSVwoELTsOAGBe1nFy5Qr/lQNBVyXIHo0MADOQIj1627kDr7tyIGjlON0LzzgAgIlLR287lfBNrhUI2mccXGXrAgAwnvZefZ3qQOtK2w5fdy8//an5sBsAwKS0rYLv050r7Sx41bUqBOdynLT/Iq0DAJiU67cKzt0oELRlCK0DAJiWm7QKzt2oZXBO6wAApuGmrYJzN6oQnOtaB+koAIAR3bxV8OKfEO9oLz/dbf4hPwUAMIpmgf7hTVsF596pQtBqDyxyiiEAjKNZlN9/1zCw+eeUcS///qj5x30RAMBQHj5I7+1FAe9cITi3OcXwMACAAaTDUmGgVSwQdKcYnnxuyBAA+paOcjz/PAoq1jI4t5d/3Ulx65fm0+0AAAo7CwOflJgbeFWxCsG57tCi9Ek4yRAASjtuKwOlw0CreCBo7ac7hznylZ/BDABcqm3Nt5WBXub1ircMXrWXf/8yRfohAIB30oSBj/oKA61eKgTn9tP7j5pKwY2PUQQA2spAfNJnGGj1Gghar4QCMwUAcD2bNsF7B9GzXlsGr9rLz+6myO0Rx3YfAMCluq2FfVcGXvzbYkDdlsTbTSjIOwEAXKCfrYVv03vL4FXdlsTnnzi8CAAukg6HDgNn/9YYQVMp2E6xte/ZBwDwBw9LHkd8HaMEgnN7+el3zX/AtwEAlcuR7u2nO/sxklEDQasJBbvdWQXmCgCo0bDDgxcZdIbgTdqtFN1cQX4cAFCRZlX+pLkHfjR2GNj8t0zHXv5tL8WqbSHYmgjAkh03LYL7Y7YIXjepQNDaPC2xPe54NwBgeZrK+MlXQ+8iuMzkAsG57jkIbbXAbAEAi3DcPvivPcE3Jmj0GYKLdEcemy0AYBEeNlWBD6caBlqTrRC8ShsBgJlq2wP3pjA0eJlZBIJz2ggAzEQTBOL+EA8lKmVWgeCcYADARM0uCJybZSA41wWDs+OPdwMAxjPbIHBu1oHgXPdo5fWeZyMAMKDj5sfjJgg8mXMQOLeIQHCuHT6M2GqPQv66+endAIDymmrA+seI9aP99MFxLMSiAsGruqpB/rL5X/zUrAEA7yYf5UiPI241IeAvR7FAiw0Er2rDQcRpUzlYNeHAvAEAV9LOBfy85BDwqioCwauatsJ211aIz5r//b+H1gIAnfasgJ9z5INmEXmwpHbAVVQXCF7XBYRbTShY313F6uMmDe6EkACwZO2N/ihFOlzH6T8jVk0QODmsLQC8rvpAcJGuzZC3V2fzB6n98bf257l7EuN2+3n3O9tfA2Bkzc08v3JDT80Nv/1aar/+r3YGYH3289uHNZT/b0IgKORe/v2RbY/VeLG6aEqLv+VYH62ai866uQB1F5+t5se/j2tfbQDzciuAtzl8WVZsb/hWF8AyCQTwUruiP+ymiuNATxGoiUBQSLOK/GsO5icfNa/ej+1JYwIAUDOBoJDNsCHzUNXeYoCrEAioxXETAh4KAQBvJhCwZMepqQasmyCwhAePAPRJIGCJNtWAk/0HZgIArkQgYEHSUY71/YjTJ4YDAa5HIGAJ2iHB+/vpzkEAcCMCATPWVQT20/uPAoB3IhAwR8c5UlsR2A8AilgFzMvDHCcfCgMAZakQlONgon4dNEHg3n764DAAKE4gKKZ9HLKHR/agaQ/ke+YEAPqlZcCUbdoDwgBA31QImCLtAYCBCQRMifYAwEi0DJgK7QGAEakQMDbtAYAJEAgYydkpg2174EkAMDotAwbXPncgx/OPhAGA6VAhKCY5mOhybXvgq6Y9cBQATIpAUI5AcCHtAYCp0zKgV9oDAPOgQkBftAcAZkQgoDDtAYA50jKgGO0BgPlSIaAE7QGAmRMIeAfaAwBLoWXAjWgPACyLCgHXpT0AsEACQQF7+dcKDiXSHgBYMi2DMhYdCLQHAJZPhYC30R4AqIRAwBtoDwDURsuAP9AeAKiTCgHntAcAKiYQVE97AAAtg6ppDwBwToWgTtoDAPyBQFDE7e2z9fbkaQ8A8GZaBkXkyR9MpD0AwNuoECyf9gAAlxIIFkt7AICr0zJYIO0BAK5LhWBZtAcAuBGBYBG0BwB4NwLBvB037YGHEc/3m6rAcQDADQkE86U9AEAxAsHstO2B3ASB9w4CAAqxy6CArWEOJjp+uXtAGACgLBWCApobdd+BQHsAgF4JBJOmPQDAMLQMpkl7AIBBqRBMj/YAAIMTCCZDewCA8WgZjE97AIDRqRCMS3sAgEkQCEahPQDAtGgZDEt7AIBJUiEoIu1c4TdpDwAwWQJB77QHAJg+LYP+aA8AMBsqBP3QHgBgVgSCorQHAJgnLYMC1rHWHgAAAGDe/j/Pfy17Z0zuTwAAAABJRU5ErkJggg==" alt="Dices" className="brand-mark" />
+          <span className="brand-word">Dices</span>
+          <span className="game-tag">Cee-Lo · 4-5-6</span>
+        </div>
+        <div className="balance-pill">
+          <span className="bal-label">BALANCE</span>
+          <span className="coin-dot" />
+          <span className="bal-val">{balance.toFixed(2)}</span>
+        </div>
+        <div className="topbar-actions">
+          <button className="icon-btn" onClick={() => setShowRules(true)} title="Rules">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4" />
+              <circle cx="12" cy="17" r="0.6" fill="currentColor" />
+            </svg>
+          </button>
+          <button className="icon-btn" title="Chat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12a8 8 0 1 1-3.8-6.8L21 4l-1.2 3.8A8 8 0 0 1 21 12z" />
+            </svg>
+          </button>
+          <div className="avatar-dot" />
+        </div>
+      </header>
+
+      {/* ── Main two-column layout ── */}
+      <main className="main-grid">
+        {/* ── Left bet rail ── */}
+        <aside className="bet-rail">
+          <div className="rail-tabs">
+            <button className="tab active">Manual</button>
+            <button className="tab">Auto</button>
+            <button className="tab">Advanced</button>
+          </div>
+
+          <div className="rail-section">
+            <AmountInput value={wager} onChange={setWager} label="MAIN WAGER" disabled={mainBetLocked} />
+            <div className="field-row">
+              <div className="field-col">
+                <label className="field-label">POTENTIAL (1:1)</label>
+                <div className="readout">{(wager * 2).toFixed(2)}</div>
+              </div>
+              <div className="field-col">
+                <label className="field-label">CEE-LO (2:1)</label>
+                <div className="readout accent">{(wager * 3).toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+
+          {TWEAKS.showSideBets && (
+            <div className="rail-section sidebets">
+              <div className="section-head">
+                <span className="section-title">SIDE BETS</span>
+                {phase === PHASES.secondWindow && <span className="live-pill">● LIVE WINDOW</span>}
+              </div>
+
+              <div className="sb-group">
+                <div className="sb-group-label">over / under</div>
+                <div className="sb-grid-2">
+                  {['under3', 'over3'].map((k) => (
+                    <SideBetChip
+                      key={k} keyName={k} def={SIDE_BETS[k]}
+                      amount={sideBetAmts[k] || 0}
+                      onSet={(a) => setSideBet(k, a)}
+                      disabled={sideBetLocked && !(phase === PHASES.secondWindow && liveAvailable.has(k))}
+                      resolved={phase === PHASES.resolved && payoutBreakdown?.sideRes?.[k]}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="sb-group">
+                <div className="sb-group-label">exact point</div>
+                <div className="sb-grid-4">
+                  {['exact2', 'exact3', 'exact4', 'exact5'].map((k) => (
+                    <SideBetChip
+                      key={k} keyName={k} def={SIDE_BETS[k]}
+                      amount={sideBetAmts[k] || 0}
+                      onSet={(a) => setSideBet(k, a)}
+                      disabled={sideBetLocked && !(phase === PHASES.secondWindow && liveAvailable.has(k))}
+                      resolved={phase === PHASES.resolved && payoutBreakdown?.sideRes?.[k]}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="sb-group">
+                <div className="sb-group-label">specials</div>
+                <div className="sb-grid-2">
+                  {['headcrack', 'aceout', 'tripsix', 'push'].map((k) => (
+                    <SideBetChip
+                      key={k} keyName={k} def={SIDE_BETS[k]}
+                      amount={sideBetAmts[k] || 0}
+                      onSet={(a) => setSideBet(k, a)}
+                      disabled={sideBetLocked && !(phase === PHASES.secondWindow && liveAvailable.has(k))}
+                      resolved={phase === PHASES.resolved && payoutBreakdown?.sideRes?.[k]}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="rail-footer">
+            <div className="stake-line">
+              <span>TOTAL STAKE</span>
+              <span className="stake-val">▴ {totalStake.toFixed(2)}</span>
+            </div>
+
+            {phase === PHASES.idle && (
+              <button className="play-btn" onClick={placeBet} disabled={!canPlaceBet}>
+                PLACE BET · ROLL
+              </button>
+            )}
+            {phase === PHASES.resolved && (
+              <button className="play-btn" onClick={nextRound}>
+                NEXT ROUND
+              </button>
+            )}
+            {(phase === PHASES.betPlaced || phase === PHASES.houseRolling) && (
+              <button className="play-btn loading" disabled>
+                HOUSE ROLLING…
+              </button>
+            )}
+            {(phase === PHASES.pointSet || phase === PHASES.secondWindow) && (
+              <button className="play-btn ready" onClick={playerRoll}>
+                {phase === PHASES.secondWindow ? 'ROLL YOUR DICE · LOCK SIDES' : 'ROLL YOUR DICE'}
+              </button>
+            )}
+            {phase === PHASES.playerRolling && (
+              <button className="play-btn loading" disabled>
+                ROLLING…
+              </button>
+            )}
+
+            {payoutBreakdown && (
+              <div className={`payout-box payout-${payoutBreakdown.mainOutcome}`}>
+                <div className="pb-row"><span>Main bet</span><span>{payoutBreakdown.mainOutcome === 'win' ? `+${(payoutBreakdown.mainPayout - wager).toFixed(2)}` : payoutBreakdown.mainOutcome === 'push' ? 'returned' : `−${wager.toFixed(2)}`}</span></div>
+                {payoutBreakdown.sidePayoutTotal > 0 && (
+                  <div className="pb-row"><span>Side bets</span><span>+{(payoutBreakdown.sidePayoutTotal - Object.values(sideBetAmts).reduce((a,b)=>a+b,0)).toFixed(2)}</span></div>
+                )}
+                <div className="pb-row total">
+                  <span>Net</span>
+                  <span>{payoutBreakdown.netChange >= 0 ? '+' : ''}{payoutBreakdown.netChange.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* ── Right stage ── */}
+        <section className="stage">
+          <div className="stage-inner">
+            <Zone
+              title="THE HOUSE"
+              subtitle={houseSubtitle}
+              dice={houseDice}
+              rolling={houseRolling}
+              result={houseResult}
+              active={houseActive}
+              glyph="⬢"
+              side="house"
+            />
+
+            <VsDivider phase={phase} outcome={outcome} />
+
+            <div className={`player-zone-wrap ${canTapToRoll ? 'tap-ready' : ''}`}
+                 onClick={canTapToRoll ? playerRoll : undefined}>
+              <Zone
+                title="YOU"
+                subtitle={playerSubtitle}
+                dice={playerDice}
+                rolling={playerRolling}
+                result={playerResult}
+                active={playerActive}
+                glyph="◆"
+                side="player"
+              />
+              {canTapToRoll && <div className="tap-hint">↻ TAP TO ROLL</div>}
+            </div>
+
+            {/* Result flash banner */}
+            {flash && (
+              <div className={`flash flash-${flash.type}`}>
+                <div className="flash-glyph">
+                  {flash.type === 'win' ? '◆◆◆' : flash.type === 'lose' ? '✕' : flash.type === 'push' ? '=' : '!'}
+                </div>
+                <div className="flash-msg">{flash.msg}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Stage footer: history strip */}
+          <HistoryStrip history={history} />
+        </section>
+      </main>
+
+      {/* ── Bottom rules tab ── */}
+      <div className="bottom-strip" onClick={() => setShowRules(true)}>
+        <div className="bs-left">
+          <span className="bs-title">Cee-Lo</span>
+          <span className="bs-tag">Dices Originals</span>
+        </div>
+        <div className="bs-right">
+          <span className="bs-odds">▴ 1,200× MAX</span>
+          <span className="bs-fair">Provably Fair ✓</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+
+      {showRules && <RulesDrawer onClose={() => setShowRules(false)} />}
+
+      {tweaksOpen && <TweaksPanel vals={tweakVals} onChange={setTweak} onClose={() => setTweaksOpen(false)} />}
+    </div>
+  );
+}
+
+// ── History strip ─────────────────────────────────────────────
+function HistoryStrip({ history }) {
+  if (!history.length) return (
+    <div className="history-strip empty">
+      <span className="hs-label">RECENT ROLLS</span>
+      <span className="hs-placeholder">no rounds yet — place your first bet</span>
+    </div>
+  );
+  return (
+    <div className="history-strip">
+      <span className="hs-label">RECENT</span>
+      <div className="hs-scroller">
+        {history.map((h) => (
+          <div key={h.id} className={`hs-chip hs-${h.outcome}`}>
+            <span className="hs-dice">
+              {h.house?.kind === 'cee-lo' ? '4·5·6' :
+               h.house?.kind === 'trips' ? `${h.house.value}·${h.house.value}·${h.house.value}` :
+               h.house?.kind === 'point' ? `P${h.house.point}` :
+               h.house?.label?.slice(0, 4) || '—'}
+            </span>
+            <span className="hs-vs">vs</span>
+            <span className="hs-dice">
+              {h.player?.kind === 'cee-lo' ? '4·5·6' :
+               h.player?.kind === 'trips' ? `${h.player.value}·${h.player.value}·${h.player.value}` :
+               h.player?.kind === 'point' ? `P${h.player.point}` :
+               h.player?.label?.slice(0, 4) || '—'}
+            </span>
+            <span className="hs-net">{h.net >= 0 ? '+' : ''}{h.net.toFixed(1)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Rules drawer ──────────────────────────────────────────────
+function RulesDrawer({ onClose }) {
+  return (
+    <div className="drawer-overlay" onClick={onClose}>
+      <div className="drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="drawer-head">
+          <h2>How Cee-Lo works</h2>
+          <button className="x-btn" onClick={onClose}>✕</button>
+        </div>
+        <div className="drawer-body">
+          <section>
+            <h3>THE LOOP</h3>
+            <p>You bet. The House rolls first. If the House doesn't auto-win or auto-lose, it sets a <em>point</em>. You tap to roll your dice, trying to beat it. Higher point wins. Same point = push.</p>
+          </section>
+          <section className="rules-grid">
+            <div className="rule-card rule-hot">
+              <div className="rule-badge">INSTANT WIN</div>
+              <div className="rule-title">4 · 5 · 6 (Cee-Lo)</div>
+              <div className="rule-sub">pays 2:1</div>
+            </div>
+            <div className="rule-card rule-hot">
+              <div className="rule-badge">INSTANT WIN</div>
+              <div className="rule-title">Trips (any)</div>
+              <div className="rule-sub">pays 3:1 · Trip Sixes 5:1</div>
+            </div>
+            <div className="rule-card rule-hot">
+              <div className="rule-badge">INSTANT WIN</div>
+              <div className="rule-title">Pair + 6 (Headcrack)</div>
+              <div className="rule-sub">pays 1:1</div>
+            </div>
+            <div className="rule-card rule-cold">
+              <div className="rule-badge">INSTANT LOSS</div>
+              <div className="rule-title">1 · 2 · 3 (Ace Out)</div>
+              <div className="rule-sub">you bust</div>
+            </div>
+            <div className="rule-card rule-cold">
+              <div className="rule-badge">INSTANT LOSS</div>
+              <div className="rule-title">Pair + 1 (Aced Out)</div>
+              <div className="rule-sub">you bust</div>
+            </div>
+            <div className="rule-card rule-neutral">
+              <div className="rule-badge">SETS POINT</div>
+              <div className="rule-title">Pair + 2/3/4/5</div>
+              <div className="rule-sub">odd die = point. higher wins.</div>
+            </div>
+            <div className="rule-card rule-dead">
+              <div className="rule-badge">DEAD ROLL</div>
+              <div className="rule-title">No pair, no straight</div>
+              <div className="rule-sub">re-roll automatically</div>
+            </div>
+          </section>
+          <section>
+            <h3>HIERARCHY (high → low)</h3>
+            <ol className="hier-list">
+              <li><span>1</span> Trip Sixes (6-6-6)</li>
+              <li><span>2</span> Other Trips (5s → 1s)</li>
+              <li><span>3</span> Cee-Lo (4-5-6)</li>
+              <li><span>4</span> Headcrack (Pair + 6)</li>
+              <li><span>5</span> Point 5 · 4 · 3 · 2</li>
+              <li><span>6</span> Aced Out (Pair + 1) — loss</li>
+              <li><span>7</span> Bust (1-2-3) — loss</li>
+            </ol>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tweaks panel ──────────────────────────────────────────────
+function TweaksPanel({ vals, onChange, onClose }) {
+  return (
+    <div className="tweaks-panel">
+      <div className="tp-head">
+        <span>Tweaks</span>
+        <button onClick={onClose}>✕</button>
+      </div>
+      <div className="tp-body">
+        <label className="tp-field">
+          <span>Animation speed</span>
+          <div className="tp-slider-row">
+            <input
+              type="range" min="0.3" max="3" step="0.1"
+              value={vals.animationSpeed}
+              onChange={(e) => onChange('animationSpeed', Number(e.target.value))}
+            />
+            <span className="tp-val">{vals.animationSpeed.toFixed(1)}×</span>
+          </div>
+        </label>
+        <label className="tp-field toggle">
+          <span>Show side bets panel</span>
+          <input
+            type="checkbox"
+            checked={vals.showSideBets}
+            onChange={(e) => onChange('showSideBets', e.target.checked)}
+          />
+        </label>
+        <label className="tp-field toggle">
+          <span>Second betting window (after House point)</span>
+          <input
+            type="checkbox"
+            checked={vals.showSecondWindow}
+            onChange={(e) => onChange('showSecondWindow', e.target.checked)}
+          />
+        </label>
+        <label className="tp-field">
+          <span>Demo — force outcome</span>
+          <select
+            value={vals.forceOutcome}
+            onChange={(e) => onChange('forceOutcome', e.target.value)}
+          >
+            <option value="off">Off (real RNG)</option>
+            <option value="win">Win</option>
+            <option value="lose">Lose</option>
+            <option value="push">Push</option>
+            <option value="headcrack">Headcrack</option>
+            <option value="trips">Trip Sixes</option>
+          </select>
+        </label>
+        <div className="tp-hint">Changes apply on the next round.</div>
+      </div>
+    </div>
+  );
+}
+
+// Mount
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+</script>
+</body>
+</html>
